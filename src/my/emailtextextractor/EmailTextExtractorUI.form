@@ -197,7 +197,7 @@
                           <EmptySpace pref="14" max="32767" attributes="0"/>
                           <Group type="103" groupAlignment="1" attributes="0">
                               <Component id="radOutgoing" min="-2" max="-2" attributes="0"/>
-                              <Component id="radIncomming" min="-2" max="-2" attributes="0"/>
+                              <Component id="radIncoming" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
@@ -206,7 +206,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="32767" attributes="0"/>
-                          <Component id="radIncomming" min="-2" max="-2" attributes="0"/>
+                          <Component id="radIncoming" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
                           <Component id="radOutgoing" min="-2" max="-2" attributes="0"/>
                       </Group>
@@ -214,7 +214,7 @@
                 </DimensionLayout>
               </Layout>
               <SubComponents>
-                <Component class="javax.swing.JRadioButton" name="radIncomming">
+                <Component class="javax.swing.JRadioButton" name="radIncoming">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Incoming"/>
                   </Properties>

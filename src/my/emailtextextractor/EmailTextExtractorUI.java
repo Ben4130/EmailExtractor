@@ -4,7 +4,10 @@
  * and open the template in the editor.
  */
 package my.emailtextextractor;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,9 +22,25 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
      */
     public EmailTextExtractorUI() {
         initComponents();
+        
+        
+        try {
+            DBManagement.createUserTable();
+            DBManagement.createSearchFilterTable();
+        } catch (SQLException ex) {
+            Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        cmbFilterName.addActionListener((ActionEvent e) -> {
+            //String filterText = (String)cmbFilterName.getSelectedItem();
+            //if ((filterText != null) && (filterText.compareTo(CMB_ENTRY_NEW_FILTER) == 0)){
+                loadSearchFilterTab();
+        });
     }
 
+    private final String CMB_ENTRY_NEW_FILTER = "<Add New Filter>";
     private UserConfiguration myUserConfig;
+    private Filter mySearchFilter;
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -40,7 +59,7 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
         lblFilterName = new javax.swing.JLabel();
         cmbFilterName = new javax.swing.JComboBox<>();
         pnlEmailDirection = new javax.swing.JPanel();
-        radIncomming = new javax.swing.JRadioButton();
+        radIncoming = new javax.swing.JRadioButton();
         radOutgoing = new javax.swing.JRadioButton();
         lblNewFilterName = new javax.swing.JLabel();
         txtNewFilterName = new javax.swing.JTextField();
@@ -89,7 +108,7 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
 
         pnlEmailDirection.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)), "Email Direction"));
 
-        radIncomming.setText("Incoming");
+        radIncoming.setText("Incoming");
 
         radOutgoing.setText("Outgoing");
 
@@ -101,13 +120,13 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
                 .addContainerGap(14, Short.MAX_VALUE)
                 .addGroup(pnlEmailDirectionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(radOutgoing)
-                    .addComponent(radIncomming)))
+                    .addComponent(radIncoming)))
         );
         pnlEmailDirectionLayout.setVerticalGroup(
             pnlEmailDirectionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlEmailDirectionLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(radIncomming)
+                .addComponent(radIncoming)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(radOutgoing))
         );
@@ -459,12 +478,11 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
     }//GEN-LAST:event_txtUsernameFocusLost
 
     private void btnSaveFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveFilterActionPerformed
-        try {
-            // TODO add your handling code here:
-            DBManagement.createSearchFilterTable("jdbc:sqlite:/Users/benphillips/testlitex");
-        } catch (SQLException ex) {
-            Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
+        
+        createUpdateSearchFilter();
+        
+        
     }//GEN-LAST:event_btnSaveFilterActionPerformed
 
     private void loadConfigTab(){
@@ -481,19 +499,66 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
             txtHostName.setText(myUserConfig.hostName);
             txtPort.setText(myUserConfig.port.toString());
             
-            if (myUserConfig.protocol.compareTo("pop3") == 0){
+            if (myUserConfig.protocol.compareTo(MailServerAccess.PROTOCOL_POP3) == 0){
                 radPop3.setSelected(true);
-            }else if(myUserConfig.protocol.compareTo("IMAP")==0){
+            }else if(myUserConfig.protocol.compareTo(MailServerAccess.PROTOCOL_IMAP)==0){
                 radImap.setSelected(true);
             }
+            populateCmbFilterName();
         }            
     }
+    
+    private void setNewFilterVisible(Boolean visible){
+        lblNewFilterName.setVisible(visible);
+        txtNewFilterName.setVisible(visible);
+    }
+    
+    private void loadSearchFilterTab(){
+        String filterText = (String)cmbFilterName.getSelectedItem();
+        setNewFilterVisible(false);
+        if ((filterText == null) || (filterText.compareTo(CMB_ENTRY_NEW_FILTER) == 0)){
+            mySearchFilter = null;
+            txtNewFilterName.setText(null);
+            dpDateFrom.setDate(null);
+            dpDateTo.setDate(null);
+            radIncoming.setSelected(false);
+            radOutgoing.setSelected(false);
+            txtSendersRecipients.setText(null);
+            txtSubject.setText(null);
+            txtBody.setText(null);
+            
+            if(filterText != null){
+                setNewFilterVisible(true);
+            }
+            
+        } else {
+            
+            try {
+                mySearchFilter = DBManagement.getSearchFilter(filterText, myUserConfig.userName);
+            } catch (SQLException ex) {
+                Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ParseException ex) {
+                Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            //txtNewFilterName.setText(mySearchFilter.);
+            dpDateFrom.setDate(mySearchFilter.dateFrom);
+            dpDateTo.setDate(mySearchFilter.dateTo);
+            //radIncoming.setSelected(mySearchFilter.);
+            //radOutgoing.setSelected(false);
+            
+            txtSendersRecipients.setText(mySearchFilter.addresses);
+            txtSubject.setText(mySearchFilter.subjectText);
+            txtBody.setText(mySearchFilter.bodyText);
+        }
+    }
+    
+    
     
     private String getProtocol(){
         if (radPop3.isSelected()){
             return "pop3";
         }else if (radImap.isSelected()){
-            return "IMAP";
+            return "imap";
         }
         return null;
     }
@@ -512,6 +577,55 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
             DBManagement.updateUserDetails(myUserConfig);
         } catch (SQLException ex) {
             Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void createUpdateSearchFilter(){
+        if (mySearchFilter == null){
+            //Create new
+            mySearchFilter = new Filter(txtNewFilterName.getText(), 
+                    dpDateFrom.getDate(), 
+                    dpDateTo.getDate(), 
+                    "Dir",
+                    txtSendersRecipients.getText(), 
+                    "INBOX", 
+                    txtSubject.getText(), 
+                    txtBody.getText());
+            
+            try {
+                DBManagement.createPersistentSearchFilter(mySearchFilter, myUserConfig);
+            } catch (SQLException ex) {
+                Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            mySearchFilter.updateFilter(
+                    mySearchFilter.filterName, 
+                    dpDateFrom.getDate(),
+                    dpDateTo.getDate(), 
+                    null,
+                    txtSendersRecipients.getText(),
+                    "INBOX",
+                    txtSubject.getText(),
+                    txtBody.getText());
+            
+            try {
+                DBManagement.updateSearchFilter(mySearchFilter, myUserConfig);
+            } catch (SQLException ex) {
+                Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    private void populateCmbFilterName (){
+        cmbFilterName.removeAllItems();
+        
+        if (myUserConfig != null){
+            cmbFilterName.addItem(CMB_ENTRY_NEW_FILTER);
+            try {
+                DBManagement.populateFilterNames(cmbFilterName, myUserConfig);
+            } catch (SQLException ex) {
+                Logger.getLogger(EmailTextExtractorUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
     
@@ -580,7 +694,7 @@ public class EmailTextExtractorUI extends javax.swing.JFrame {
     private javax.swing.JPanel pnlFilters;
     private javax.swing.JPanel pnlTextFilters;
     private javax.swing.JRadioButton radImap;
-    private javax.swing.JRadioButton radIncomming;
+    private javax.swing.JRadioButton radIncoming;
     private javax.swing.JRadioButton radOutgoing;
     private javax.swing.JRadioButton radPop3;
     private javax.swing.JTabbedPane tabFilterConfig;
