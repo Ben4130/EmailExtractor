@@ -1,6 +1,7 @@
 
 package my.emailtextextractor;
-import sun.util.calendar.BaseCalendar.Date;
+//import sun.util.calendar.BaseCalendar.Date;
+import java.util.Date;
 
 /*
  * To change this license header, choose License Headers in Project Properties.

@@ -21,6 +21,9 @@ import javax.mail.Store;
  * @author benphillips
  */
 class MailServerAccess {
+    public static final String PROTOCOL_POP3 = "pop3";
+    public static final String PROTOCOL_POP3TLS = "pop3s";
+    public static final String PROTOCOL_IMAP = "imap";
     
     public static void getFolderList(UserConfiguration userConfig, String pw){
         Properties properties = new Properties();
@@ -38,7 +41,12 @@ class MailServerAccess {
         }
         
         try {
-            Store store = emailSession.getStore(userConfig.protocol + "s");
+            String protocol = userConfig.protocol;
+            if (protocol.compareTo(PROTOCOL_POP3) == 0){
+                protocol = PROTOCOL_POP3TLS;
+            }
+            
+            Store store = emailSession.getStore(protocol);
             store.connect(userConfig.hostName, userConfig.userName, pw);
             
             //Folder emailFolder = store.getFolder("INBOX");
